@@ -22,18 +22,39 @@ function updateScore(team, increment) {
   const scoreElement = document.querySelector(`.team-${team}`);
   const victoryElement = document.querySelector(`.victory-${team}`);
   let score = parseInt(scoreElement.textContent);
-  
-  if (score < 15) {
-    score = increment ? score + 1 : Math.max(score - 1, 0);
+  const otherTeam = team === 'red' ? 'blue' : 'red';
+  const otherScore = parseInt(document.querySelector(`.team-${otherTeam}`).textContent);
+
+  // Limite configurável
+  let limit = setPointLimit;
+
+  // Prorrogação: se ambos >= limit-1, só vence com diferença de 2
+  if (score >= limit - 1 && otherScore >= limit - 1) {
+    if (increment) score++;
+    else score = Math.max(score - 1, 0);
     scoreElement.textContent = score.toString().padStart(2, '0');
-    
-    if (score === 15) {
-      // Incrementa o contador de vitória no localStorage
+
+    // Vitória só se diferença >=2 e >= limit
+    if (score >= limit && score - otherScore >= 2) {
       const victoryCount = parseInt(localStorage.getItem(`${team}-victory`)) || 0;
       localStorage.setItem(`${team}-victory`, victoryCount + 1);
-      
       victoryElement.textContent = victoryCount + 1;
-      
+      document.querySelectorAll('.increment, .decrement').forEach(button => {
+        button.removeEventListener('click', incrementDecrementHandler);
+      });
+    }
+    return;
+  }
+
+  // Normal: até o limite
+  if (score < limit) {
+    score = increment ? score + 1 : Math.max(score - 1, 0);
+    scoreElement.textContent = score.toString().padStart(2, '0');
+
+    if (score === limit && otherScore < limit - 1) {
+      const victoryCount = parseInt(localStorage.getItem(`${team}-victory`)) || 0;
+      localStorage.setItem(`${team}-victory`, victoryCount + 1);
+      victoryElement.textContent = victoryCount + 1;
       document.querySelectorAll('.increment, .decrement').forEach(button => {
         button.removeEventListener('click', incrementDecrementHandler);
       });
@@ -55,6 +76,9 @@ document.querySelectorAll('.increment, .decrement').forEach(button => {
 const resetBtn = document.getElementById('reset-btn');
 
 function resetScores() {
+  const reset = window.confirm("Tem certeza que deseja reiniciar o placar?")
+  if (!reset) return;
+  
   document.querySelectorAll('.score').forEach(scoreElement => {
     scoreElement.textContent = '00';
   });
@@ -126,3 +150,24 @@ function cleanLocalStorageAndReset() {
 
 cleanBtn.addEventListener('click', cleanLocalStorageAndReset);
 
+// Configuração de pontos do set
+let setPointLimit = parseInt(localStorage.getItem('set-point-limit')) || 15;
+
+// Modal de configuração
+const modal = document.getElementById('modal-config');
+const openConfigBtn = document.getElementById('open-config');
+const closeModalBtn = document.getElementById('close-modal');
+const saveConfigBtn = document.getElementById('save-config');
+const setPointInput = document.getElementById('set-point-limit');
+
+openConfigBtn.onclick = () => {
+  setPointInput.value = setPointLimit;
+  modal.style.display = 'flex';
+};
+closeModalBtn.onclick = () => modal.style.display = 'none';
+saveConfigBtn.onclick = () => {
+  setPointLimit = parseInt(setPointInput.value) || 15;
+  localStorage.setItem('set-point-limit', setPointLimit);
+  modal.style.display = 'none';
+  resetScores();
+};
