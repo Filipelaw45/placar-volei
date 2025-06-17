@@ -150,10 +150,8 @@ function cleanLocalStorageAndReset() {
 
 cleanBtn.addEventListener('click', cleanLocalStorageAndReset);
 
-// Configuração de pontos do set
 let setPointLimit = parseInt(localStorage.getItem('set-point-limit')) || 15;
 
-// Modal de configuração
 const modal = document.getElementById('modal-config');
 const openConfigBtn = document.getElementById('open-config');
 const closeModalBtn = document.getElementById('close-modal');
